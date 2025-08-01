@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>羽球報名系統</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: auto; padding: 2em; background: #f7f7f7; }
+    h2, h3 { text-align: center; }
+    form { background: white; padding: 1em; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    label { display: block; margin-top: 1em; }
+    input, textarea, button {
+      width: 100%; padding: 0.5em; margin-top: 0.5em;
+      border: 1px solid #ccc; border-radius: 4px;
+    }
+    button { background-color: #4CAF50; color: white; font-weight: bold; }
+    .success { color: green; font-weight: bold; text-align: center; margin-top: 1em; }
+    .duplicate { color: red; font-weight: bold; text-align: center; margin-top: 1em; }
+    ul { list-style-type: none; padding: 0; }
+    li { background: white; margin: 0.5em 0; padding: 0.8em; border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body>
+  <h2>羽球報名表單</h2>
+  <form id="signupForm">
+    <label>暱稱：
+      <input type="text" name="Nickname" required>
+    </label>
+    <label>LINE ID（避免重複報名）：
+      <input type="text" name="LineID" required>
+    </label>
+    <label>備註：
+      <textarea name="Note" rows="3"></textarea>
+    </label>
+    <button type="submit">我要報名！</button>
+  </form>
+  <p id="statusMsg"></p>
+
+  <h3>目前報名名單</h3>
+  <ul id="nameList"></ul>
+
+  <script>
+    const scriptURL = "https://script.google.com/macros/s/YOUR_SCRIPT_URL/exec";
+
+    document.getElementById('signupForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+
+      fetch(scriptURL, { method: 'POST', body: formData })
+        .then(response => response.text())
+        .then(text => {
+          if (text === "duplicate") {
+            document.getElementById("statusMsg").textContent = "❌ 這個 LINE ID 已經報名過了！";
+            document.getElementById("statusMsg").className = "duplicate";
+          } else {
+            document.getElementById("statusMsg").textContent = "✅ 報名成功！";
+            document.getElementById("statusMsg").className = "success";
+            document.getElementById('signupForm').reset();
+            loadList();
+          }
+        });
+    });
+
+    function loadList() {
+      fetch(scriptURL)
+        .then(res => res.json())
+        .then(data => {
+          const list = document.getElementById("nameList");
+          list.innerHTML = "";
+          data.forEach(row => {
+            const li = document.createElement("li");
+            li.textContent = `${row.nickname}（${row.note || "無備註"}）`;
+            list.appendChild(li);
+          });
+        });
+    }
+
+    loadList();
+  </script>
+</body>
+</html>
