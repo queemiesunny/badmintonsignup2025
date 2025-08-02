@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>羽球報名表單</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    label, input, textarea { display: block; margin-top: 10px; }
+    .success { color: green; }
+    .duplicate { color: red; }
+  </style>
+</head>
+<body>
+  <h2>羽球活動報名</h2>
+  <form id="signupForm">
+    <label>暱稱：<input type="text" name="Nickname" required></label>
+    <label>LINE ID（用來驗重）：<input type="text" name="LineID" required></label>
+    <label>備註：<textarea name="Note"></textarea></label>
+    <button type="submit">報名</button>
+  </form>
+  <p id="statusMsg"></p>
+
+  <h3>目前報名名單</h3>
+  <ul id="nameList"></ul>
+
+  <script>
+    const scriptURL = "https://script.google.com/macros/s/【https://script.google.com/macros/s/AKfycbxSNK1l1rvfCyPNvsO7hID6mqV90EHTzcQFiMyhmx53YgHQfZcb1LD4S1xKsxcWaW00/exec】/exec";
+
+    document.getElementById('signupForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+
+      fetch(scriptURL, { method: 'POST', body: formData })
+        .then(response => response.text())
+        .then(text => {
+          if (text === "duplicate") {
+            document.getElementById("statusMsg").textContent = "❌ 這個 LINE ID 已經報名過了喔！";
+            document.getElementById("statusMsg").className = "duplicate";
+          } else {
+            document.getElementById("statusMsg").textContent = "✅ 報名成功！";
+            document.getElementById("statusMsg").className = "success";
+            document.getElementById('signupForm').reset();
+            loadList(); // Refresh list
+          }
+        });
+    });
+
+    function loadList() {
+      fetch(scriptURL)
+        .then(res => res.json())
+        .then(data => {
+          const list = document.getElementById("nameList");
+          list.innerHTML = "";
+          data.forEach(row => {
+            const li = document.createElement("li");
+            li.textContent = `${row.nickname}（${row.note || "無備註"}）`;
+            list.appendChild(li);
+          });
+        });
+    }
+
+    loadList(); // Initial load
+  </script>
+</body>
+</html>
